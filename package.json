@@ -1,0 +1,25 @@
+{
+  "name": "group15-buoi4-project-",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hieudh22tin01/Group15-Buoi4-project-.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hieudh22tin01/Group15-Buoi4-project-/issues"
+  },
+  "homepage": "https://github.com/hieudh22tin01/Group15-Buoi4-project-#readme",
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "nodemon": "^3.1.10"
+  }
+}
