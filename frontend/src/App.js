@@ -12,7 +12,7 @@ function App() {
 
   return (
     <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
-      <h1>🚀 Quản lý Users (React + Express)</h1>
+      <h1>🤖 Quản lý người dùng 🤖</h1>
       <AddUser onUserAdded={handleUserAdded} />
       {/* key giúp component render lại khi flag đổi */}
       <UserList key={reloadFlag} />
