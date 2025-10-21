@@ -1,1 +1,1 @@
-VanKhoa vai tro backend
+VanKhoa vai tro backend kèm frontend
