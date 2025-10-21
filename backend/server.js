@@ -1,15 +1,19 @@
 const express = require("express");
-const app = express();
-const port = 3000;
+const mongoose = require("mongoose");
+const cors = require("cors");
 
+const app = express();
 app.use(express.json());
+app.use(cors());
+
+// ✅ Kết nối MongoDB Atlas
+mongoose.connect("mongodb+srv://vankhoa100704_db_user:rKavUAL73QFVBmo4@cluster0.wq1cw4t.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+  .then(() => console.log("✅ Connected to MongoDB Atlas"))
+  .catch(err => console.error("❌ MongoDB connection error:", err));
+
+// ✅ Import routesno
 const userRoutes = require("./routes/users");
 app.use("/users", userRoutes);
-app.get("/", (req, res) => {
-  res.send("Trang chủ API đang hoạt động 🚀");
-});
-app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
-});
 
-
+const port = 3000;
+app.listen(port, () => console.log(`🚀 Server running on port ${port}`));
