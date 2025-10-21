@@ -1,5 +1,12 @@
 const mongoose = require("mongoose");
 
+const userSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  email: String,
+});
+
+module.exports = mongoose.model("User", userSchema);
+=======
 // Định nghĩa schema cho user
 const userSchema = new mongoose.Schema({
   name: {
@@ -18,3 +25,4 @@ const userSchema = new mongoose.Schema({
 const User = mongoose.model("User", userSchema);
 
 module.exports = User;
+

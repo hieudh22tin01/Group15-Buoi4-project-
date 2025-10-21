@@ -2,6 +2,14 @@ const express = require("express");
 const router = express.Router();
 const User = require("../models/user"); // ✅ import model từ MongoDB
 
+
+const userController = require("../../controllers/userControllers");
+// CRUD routes
+router.get("/", userController.getAllUsers);
+router.post("/", userController.createUser);
+router.put("/:id", userController.updateUser);
+router.delete("/:id", userController.deleteUser);
+=======
 // ✅ GET /users → lấy danh sách user từ MongoDB
 router.get("/", async (req, res) => {
   try {
@@ -28,5 +36,6 @@ router.post("/", async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+
 
 module.exports = router;
