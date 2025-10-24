@@ -8,9 +8,8 @@ export default function AddUser({ onUserAdded }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // 🔍 Validation
     if (!name.trim()) {
-      alert("Name không được để trống");
+      alert("Tên không được để trống");
       return;
     }
 
@@ -20,13 +19,37 @@ export default function AddUser({ onUserAdded }) {
       return;
     }
 
-    // ✅ Gửi dữ liệu hợp lệ lên server
-    await axios.post("http://localhost:3000/users", { name, email });
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("Bạn chưa đăng nhập admin!");
+        return;
+      }
 
-    // Reset form và gọi lại danh sách
-    setName("");
-    setEmail("");
-    onUserAdded();
+      const res = await axios.post(
+        "http://localhost:5000/api/users", // ⚙️ Đổi port nếu backend chạy port khác
+        {
+          name: form.name,
+          email: form.email,
+          password: "123456",
+          role: "user",
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
+          },
+        }
+      );
+
+      alert("✅ " + res.data.message);
+      setName("");
+      setEmail("");
+      onUserAdded();
+    } catch (err) {
+      console.error("❌ Lỗi khi thêm user:", err.response?.data || err.message);
+      alert(err.response?.data?.message || "Lỗi khi thêm user!");
+    }
   };
 
   return (

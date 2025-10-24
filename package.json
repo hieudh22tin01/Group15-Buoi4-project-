@@ -1,26 +1,16 @@
 {
-  "name": "group15-buoi4-project-",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/hieudh22tin01/Group15-Buoi4-project-.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/hieudh22tin01/Group15-Buoi4-project-/issues"
-  },
-  "homepage": "https://github.com/hieudh22tin01/Group15-Buoi4-project-#readme",
   "dependencies": {
+    "axios": "^1.12.2",
+    "bcryptjs": "^3.0.2",
+    "cloudinary": "^1.41.3",
+    "crypto": "^1.0.1",
     "dotenv": "^17.2.3",
-    "express": "^5.1.0",
-    "mongoose": "^8.19.1",
-    "nodemon": "^3.1.10"
+    "install": "^0.13.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.2",
+    "multer-storage-cloudinary": "^4.0.0",
+    "nodemailer": "^7.0.10",
+    "npm": "^11.6.2",
+    "react-router-dom": "^7.9.4"
   }
 }
