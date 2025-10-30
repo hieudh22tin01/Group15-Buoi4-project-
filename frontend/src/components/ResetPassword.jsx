@@ -4,6 +4,7 @@ import axios from "axios";
 function ResetPassword() {
   // ✅ Dùng window.location để chắc chắn luôn lấy được token
   const token = new URLSearchParams(window.location.search).get("token");
+  console.log("🔑 Token gửi đi:", token);
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -11,7 +12,9 @@ function ResetPassword() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    console.log("Token lấy được:", token); // 👉 kiểm tra xem có in ra chuỗi token không
+    console.log("🔗 URL hiện tại:", window.location.href);
+    console.log("🔑 Token lấy được:", token);
+
 
     if (!token) {
       setMessage("❌ Token không tồn tại trong URL!");
@@ -24,7 +27,7 @@ function ResetPassword() {
     try {
       const res = await axios.post("http://localhost:5000/api/auth/reset-password", {
         token, // ✅ bây giờ chắc chắn có token trong body
-        newPassword: password,
+        password,
       });
 
       setMessage(res.data.message || "✅ Đặt lại mật khẩu thành công!");

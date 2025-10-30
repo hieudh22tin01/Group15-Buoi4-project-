@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import ResetPassword from "./components/ResetPassword";
 
 import {
   BrowserRouter as Router,
@@ -11,6 +12,7 @@ import {
 import { Pencil, Trash2, Upload } from "lucide-react";
 
 const API = "http://localhost:5000/api";
+
 
 // ============================
 // COMPONENT: QUẢN LÝ NGƯỜI DÙNG
@@ -206,54 +208,8 @@ function ForgotPassword() {
   );
 }
 
-// ============================
-// COMPONENT: RESET PASSWORD
-// ============================
-function ResetPassword() {
-  const { token } = useParams();
-  const [password, setPassword] = useState("");
-  const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await axios.post(`${API}/auth/reset-password`, {
-  token,        // token nằm trong body
-  newPassword: password,     // mật khẩu mới
-});
-      alert("Cập nhật mật khẩu thành công!");
-      navigate("/login");
-    } catch {
-      alert("Token không hợp lệ hoặc đã hết hạn!");
-    }
-  };
 
-  return (
-    <div className="flex justify-center items-center h-screen bg-purple-100">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-6 rounded-2xl shadow-xl w-80"
-      >
-        <h2 className="text-xl font-bold mb-4 text-center">
-          Đặt lại mật khẩu 🗝️
-        </h2>
-        <input
-          type="password"
-          placeholder="Mật khẩu mới"
-          className="w-full p-2 mb-3 border rounded"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <button
-          type="submit"
-          className="w-full bg-green-500 text-white p-2 rounded"
-        >
-          Xác nhận
-        </button>
-      </form>
-    </div>
-  );
-}
 
 // ============================
 // COMPONENT: UPLOAD AVATAR

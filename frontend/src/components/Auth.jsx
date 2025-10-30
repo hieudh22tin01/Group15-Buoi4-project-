@@ -5,7 +5,7 @@ export default function Auth() {
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [token, setToken] = useState("");
   const [isLogin, setIsLogin] = useState(true);
-  const API = "http://localhost:3000/api/auth";
+  const API = "http://localhost:5000/api/auth";
 
   const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
 
