@@ -27,18 +27,25 @@ const upload = multer({ storage });
 // Upload avatar
 router.post("/upload-avatar", upload.single("avatar"), async (req, res) => {
   try {
+    if (!req.file) return res.status(400).json({ message: "Không có file tải lên!" });
+
     const token = req.headers.authorization?.split(" ")[1];
-    const decoded = jwt.verify(token, "secret_key");
+    if (!token) return res.status(401).json({ message: "Thiếu token!" });
+
+    const decoded = jwt.verify(token, "secret_key_demo");
     const user = await User.findById(decoded.id);
     if (!user) return res.status(404).json({ message: "Không tìm thấy user!" });
 
     user.avatar = req.file.path;
     await user.save();
+
     res.json({ message: "Upload avatar thành công!", avatar: user.avatar });
   } catch (err) {
+    console.error("Lỗi upload avatar:", err);
     res.status(500).json({ message: "Lỗi server", error: err.message });
   }
 });
+
 
 // Middleware xác thực
 function authMiddleware(req, res, next) {
@@ -49,7 +56,7 @@ function authMiddleware(req, res, next) {
   if (!token) return res.status(401).json({ message: "Token không hợp lệ!" });
 
   try {
-    const decoded = jwt.verify(token, "secret_key");
+    const decoded = jwt.verify(token, process.env.SECRET_KEY);
     req.user = decoded;
     next();
   } catch (err) {

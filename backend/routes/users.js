@@ -1,11 +1,16 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
 const User = require("../models/user");
 
 const router = express.Router();
 
-// ✅ Middleware kiểm tra quyền admin
+/* ----------------------------------------
+   ✅ Middleware kiểm tra quyền admin
+---------------------------------------- */
 function adminOnly(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader) return res.status(401).json({ message: "Thiếu token!" });
@@ -27,7 +32,9 @@ function adminOnly(req, res, next) {
   }
 }
 
-// ✅ GET /api/users — chỉ admin được xem
+/* ----------------------------------------
+   ✅ GET /api/users — chỉ admin được xem
+---------------------------------------- */
 router.get("/", adminOnly, async (req, res) => {
   try {
     const users = await User.find().select("-password");
@@ -37,7 +44,9 @@ router.get("/", adminOnly, async (req, res) => {
   }
 });
 
-// ✅ POST /api/users — admin thêm user mới
+/* ----------------------------------------
+   ✅ POST /api/users — admin thêm user mới
+---------------------------------------- */
 router.post("/", adminOnly, async (req, res) => {
   try {
     console.log("📩 Dữ liệu nhận từ frontend:", req.body);
@@ -46,7 +55,6 @@ router.post("/", adminOnly, async (req, res) => {
     if (!name || !email || !password) {
       return res.status(400).json({ message: "Thiếu thông tin bắt buộc!" });
     }
-    
 
     const existingUser = await User.findOne({ email });
     if (existingUser)
@@ -63,7 +71,12 @@ router.post("/", adminOnly, async (req, res) => {
 
     res.status(201).json({
       message: "Thêm user thành công!",
-      user: { id: newUser._id, name: newUser.name, email: newUser.email, role: newUser.role },
+      user: {
+        id: newUser._id,
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role,
+      },
     });
   } catch (err) {
     console.error("❌ Lỗi server khi thêm user:", err.message);
@@ -71,8 +84,9 @@ router.post("/", adminOnly, async (req, res) => {
   }
 });
 
-
-// ✅ PUT /api/users/:id — admin cập nhật user
+/* ----------------------------------------
+   ✅ PUT /api/users/:id — admin cập nhật user
+---------------------------------------- */
 router.put("/:id", adminOnly, async (req, res) => {
   try {
     const { name, email, role } = req.body;
@@ -92,13 +106,54 @@ router.put("/:id", adminOnly, async (req, res) => {
   }
 });
 
-// ✅ DELETE /api/users/:id — admin xóa user
+/* ----------------------------------------
+   ✅ DELETE /api/users/:id — admin xóa user
+---------------------------------------- */
 router.delete("/:id", adminOnly, async (req, res) => {
   try {
     await User.findByIdAndDelete(req.params.id);
     res.json({ message: "Đã xóa user!" });
   } catch (err) {
     res.status(500).json({ message: "Xóa user thất bại", error: err.message });
+  }
+});
+
+/* ----------------------------------------
+   ✅ POST /api/users/upload-avatar — admin upload avatar
+---------------------------------------- */
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadPath = path.join(__dirname, "../uploads");
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true });
+    }
+    cb(null, uploadPath);
+  },
+  filename: function (req, file, cb) {
+    const uniqueName = Date.now() + "-" + file.originalname;
+    cb(null, uniqueName);
+  },
+});
+
+const upload = multer({ storage });
+
+router.post("/upload-avatar", adminOnly, upload.single("avatar"), async (req, res) => {
+  try {
+    console.log("📸 File nhận được:", req.file);
+
+    if (!req.file) {
+      return res.status(400).json({ message: "Chưa có file nào được tải lên!" });
+    }
+
+    const fileUrl = `/uploads/${req.file.filename}`;
+
+    res.status(200).json({
+      message: "Upload thành công!",
+      filePath: fileUrl,
+    });
+  } catch (err) {
+    console.error("❌ Lỗi khi upload:", err);
+    res.status(500).json({ message: "Lỗi server khi upload!", error: err.message });
   }
 });
 

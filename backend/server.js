@@ -4,20 +4,24 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
-const User = require("./models/user"); // 👈 Thêm dòng này để tạo admin
+const User = require("./models/user"); // 👈 dùng để tạo admin
+
+// ✅ KHÔNG cần require("./routes/auth") ở đây
 
 // ✅ Khởi tạo app
 const app = express();
 
 // ✅ Middleware
 app.use(express.json());
+app.use("/uploads", express.static("uploads"));
 app.use(
   cors({
-    origin: "http://localhost:5173", // React đang chạy
+    origin: "http://localhost:5173",
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   })
 );
+
 
 // ✅ Kết nối MongoDB Atlas
 mongoose
@@ -71,7 +75,7 @@ app.use("/api/profile", profileRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/upload", require("./routes/uploadRoutes"));
 app.use("/api/users", require("./routes/uploadRoutes")); // 👈 thêm dòng này
-app.use("/api/auth", require("./routes/authRoutes"));
+
 
 // ✅ Kiểm tra route gốc
 app.get("/", (req, res) => {
