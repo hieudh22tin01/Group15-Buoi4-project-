@@ -5,7 +5,7 @@ const crypto = require("crypto");
 const sendEmail = require("../backend/utils/sendEmail");
 require("dotenv").config();
 
-const SECRET_KEY = "secret123"; // nên lưu .env
+const SECRET_KEY = "secret_key_demo"; // nên lưu .env
 
 exports.forgotPassword = async (req, res) => {
   const { email } = req.body;
@@ -24,21 +24,30 @@ exports.forgotPassword = async (req, res) => {
 };
 
 exports.resetPassword = async (req, res) => {
-  const { token } = req.params;
-  const { newPassword: password } = req.body;
-  const user = await User.findOne({
-    resetToken: token,
-    resetTokenExpire: { $gt: Date.now() },
-  });
-  if (!user) return res.status(400).json({ message: "Token không hợp lệ!" });
+  try {
+    // NHẬN token và newPassword từ body
+    const { token, newPassword } = req.body;
+    if (!token || !newPassword) {
+      return res.status(400).json({ message: "Missing token or newPassword" });
+    }
 
-  const hash = await bcrypt.hash(newPassword, 10);
-  user.password = hash;
-  user.resetToken = undefined;
-  user.resetTokenExpire = undefined;
-  await user.save();
+    const user = await User.findOne({
+      resetToken: token,
+      resetTokenExpire: { $gt: Date.now() },
+    });
 
-  res.json({ message: "Đặt lại mật khẩu thành công!" });
+    if (!user) return res.status(400).json({ message: "Token không hợp lệ hoặc đã hết hạn!" });
+
+    const hash = await bcrypt.hash(newPassword, 10);
+    user.password = hash;
+    user.resetToken = undefined;
+    user.resetTokenExpire = undefined;
+    await user.save();
+
+    res.json({ message: "Đặt lại mật khẩu thành công!" });
+  } catch (err) {
+    res.status(500).json({ message: "Lỗi server", error: err.message });
+  }
 };
 // ✅ Đăng ký
 exports.signup = async (req, res) => {
