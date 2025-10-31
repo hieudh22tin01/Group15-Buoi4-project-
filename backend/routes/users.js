@@ -5,37 +5,18 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 const User = require("../models/user");
-
+const authMiddleware = require("../middleware/authMiddleware");
 const router = express.Router();
-
-/* ----------------------------------------
-   ✅ Middleware kiểm tra quyền admin
----------------------------------------- */
+// ✅ Middleware kiểm tra quyền admin
 function adminOnly(req, res, next) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader) return res.status(401).json({ message: "Thiếu token!" });
-
-  const token = authHeader.split(" ")[1];
-  try {
-    // ✅ Phải trùng với key trong authRoutes.js
-    const decoded = jwt.verify(token, "secret_key_demo");
-
-    if (decoded.role !== "admin") {
-      return res.status(403).json({ message: "Chỉ admin mới có quyền!" });
-    }
-
-    req.user = decoded;
-    next();
-  } catch (err) {
-    console.error("❌ Lỗi xác thực token:", err.message);
-    res.status(403).json({ message: "Token sai hoặc hết hạn!" });
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ message: "Chỉ admin mới có quyền!" });
   }
+  next();
 }
 
-/* ----------------------------------------
-   ✅ GET /api/users — chỉ admin được xem
----------------------------------------- */
-router.get("/", adminOnly, async (req, res) => {
+// ✅ GET /api/users — chỉ admin được xem
+router.get("/", authMiddleware, adminOnly, async (req, res) => {
   try {
     const users = await User.find().select("-password");
     res.json(users);
