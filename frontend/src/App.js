@@ -334,16 +334,25 @@ function Login() {
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await axios.post(`${API}/auth/login`, form);
-      localStorage.setItem("token", res.data.token);
-      alert("Đăng nhập thành công!");
-      navigate("/users");
-    } catch {
-      alert("Sai tài khoản hoặc mật khẩu!");
-    }
-  };
+  e.preventDefault();
+  try {
+    const res = await axios.post(`${API}/auth/login`, form);
+
+    // ✅ Lưu đúng key mà backend trả về
+    localStorage.setItem("token", res.data.accessToken);
+    localStorage.setItem("refreshToken", res.data.refreshToken);
+
+    console.log("🧠 accessToken:", res.data.accessToken);
+    console.log("✅ Token đã lưu:", localStorage.getItem("token"));
+
+    alert("Đăng nhập thành công!");
+    navigate("/users");
+  } catch (err) {
+    console.error("❌ Lỗi đăng nhập:", err);
+    alert("Sai tài khoản hoặc mật khẩu!");
+  }
+};
+
 
   return (
     <div className="flex justify-center items-center h-screen bg-purple-100">

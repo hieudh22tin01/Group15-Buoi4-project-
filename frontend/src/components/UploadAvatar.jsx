@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import axiosInstance from "../api/axiosInstance"; // ✅ dùng axiosInstance tự refresh token
 
 export default function UploadAvatar() {
   const [file, setFile] = useState(null);
@@ -8,40 +8,32 @@ export default function UploadAvatar() {
 
   const handleUpload = async (e) => {
     e.preventDefault();
+
     if (!file) {
-      alert("⚠️ Vui lòng chọn ảnh!");
+      setMessage("⚠️ Vui lòng chọn ảnh!");
       return;
     }
 
     try {
       const formData = new FormData();
-      formData.append("avatar", file); // ✅ Đúng tên trùng với backend: upload.single("avatar")
+      formData.append("avatar", file); // 👈 Tên field trùng với backend (upload.single("avatar"))
 
-      const token = localStorage.getItem("token");
-      if (!token) {
-        setMessage("❌ Thiếu token, vui lòng đăng nhập lại!");
-        return;
-      }
+      // Gọi API qua axiosInstance (có auto refresh token)
+      const res = await axiosInstance.post("/users/upload-avatar", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
-      // ✅ Gửi request đúng endpoint backend
-      const res = await axios.post(
-        "http://localhost:5000/api/users/upload-avatar",
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
-      // ✅ Backend trả về filePath — ghép với host để tạo URL đầy đủ
+      // ✅ Backend trả về { filePath: ".../uploads/abc.png" }
       const fullUrl = `http://localhost:5000${res.data.filePath}`;
       setAvatarUrl(fullUrl);
       setMessage("✅ Upload thành công!");
     } catch (err) {
-      console.error("❌ Upload lỗi:", err);
-      setMessage(err.response?.data?.message || "❌ Upload thất bại!");
+      console.error("❌ Lỗi upload:", err);
+      if (err.response?.status === 401) {
+        setMessage("⚠️ Phiên đăng nhập hết hạn. Đang thử refresh token...");
+      } else {
+        setMessage(err.response?.data?.message || "❌ Upload thất bại!");
+      }
     }
   };
 
@@ -68,14 +60,18 @@ export default function UploadAvatar() {
       {message && (
         <p
           className={`mt-3 text-center ${
-            message.includes("✅") ? "text-green-600" : "text-red-500"
+            message.includes("✅")
+              ? "text-green-600"
+              : message.includes("⚠️")
+              ? "text-yellow-500"
+              : "text-red-500"
           }`}
         >
           {message}
         </p>
       )}
 
-      {/* Hiển thị ảnh sau khi upload */}
+      {/* ✅ Hiển thị ảnh sau khi upload */}
       {avatarUrl && (
         <div className="mt-4 text-center">
           <img
