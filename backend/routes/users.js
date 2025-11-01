@@ -6,13 +6,20 @@ const path = require("path");
 const fs = require("fs");
 const User = require("../models/user");
 const authMiddleware = require("../middleware/authMiddleware");
-const checkRole = require("../middleware/checkRole"); // ✅ import middleware mới
 const router = express.Router();
 
-/* ----------------------------------------
-   ✅ GET /api/users — Admin, Moderator được xem
----------------------------------------- */
-router.get("/", authMiddleware, checkRole(["Admin", "Moderator"]), async (req, res) => {
+// ✅ Middleware kiểm tra quyền admin
+function adminOnly(req, res, next) {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ message: "Access denied: insufficient role" });
+  }
+  next();
+}
+
+/* ======================================================
+   ✅ Lấy danh sách user — chỉ admin được phép
+====================================================== */
+router.get("/", authMiddleware, adminOnly, async (req, res) => {
   try {
     const users = await User.find().select("-password");
     res.json(users);
@@ -21,29 +28,25 @@ router.get("/", authMiddleware, checkRole(["Admin", "Moderator"]), async (req, r
   }
 });
 
-/* ----------------------------------------
-   ✅ POST /api/users — chỉ Admin được thêm user mới
----------------------------------------- */
-router.post("/", authMiddleware, checkRole("Admin"), async (req, res) => {
+/* ======================================================
+   ✅ Thêm user mới — chỉ admin được phép
+====================================================== */
+router.post("/", authMiddleware, adminOnly, async (req, res) => {
   try {
-    console.log("📩 Dữ liệu nhận từ frontend:", req.body);
     const { name, email, password, role } = req.body;
-
-    if (!name || !email || !password) {
+    if (!name || !email || !password)
       return res.status(400).json({ message: "Thiếu thông tin bắt buộc!" });
-    }
 
     const existingUser = await User.findOne({ email });
     if (existingUser)
       return res.status(400).json({ message: "Email đã được sử dụng!" });
 
     const hashedPassword = await bcrypt.hash(password, 10);
-
     const newUser = await User.create({
       name,
       email,
       password: hashedPassword,
-      role: role || "User", // 🔧 luôn gán "User" nếu không có role
+      role: role || "user",
     });
 
     res.status(201).json({
@@ -56,18 +59,16 @@ router.post("/", authMiddleware, checkRole("Admin"), async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("❌ Lỗi server khi thêm user:", err.message);
     res.status(500).json({ message: "Lỗi server", error: err.message });
   }
 });
 
-/* ----------------------------------------
-   ✅ PUT /api/users/:id — chỉ Admin được cập nhật user
----------------------------------------- */
-router.put("/:id", authMiddleware, checkRole("Admin"), async (req, res) => {
+/* ======================================================
+   ✅ Cập nhật user — chỉ admin được phép
+====================================================== */
+router.put("/:id", authMiddleware, adminOnly, async (req, res) => {
   try {
     const { name, email, role } = req.body;
-
     const updatedUser = await User.findByIdAndUpdate(
       req.params.id,
       { name, email, role },
@@ -83,10 +84,10 @@ router.put("/:id", authMiddleware, checkRole("Admin"), async (req, res) => {
   }
 });
 
-/* ----------------------------------------
-   ✅ DELETE /api/users/:id — chỉ Admin được xóa user
----------------------------------------- */
-router.delete("/:id", authMiddleware, checkRole("Admin"), async (req, res) => {
+/* ======================================================
+   ✅ Xóa user — chỉ admin được phép
+====================================================== */
+router.delete("/:id", authMiddleware, adminOnly, async (req, res) => {
   try {
     await User.findByIdAndDelete(req.params.id);
     res.json({ message: "Đã xóa user!" });
@@ -95,9 +96,9 @@ router.delete("/:id", authMiddleware, checkRole("Admin"), async (req, res) => {
   }
 });
 
-/* ----------------------------------------
-   ✅ POST /api/users/upload-avatar — chỉ Admin và Moderator được upload avatar
----------------------------------------- */
+/* ======================================================
+   ✅ Upload Avatar — user nào cũng được
+====================================================== */
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     const uploadPath = path.join(__dirname, "../uploads");
@@ -117,21 +118,25 @@ const upload = multer({ storage });
 router.post(
   "/upload-avatar",
   authMiddleware,
-  checkRole(["Admin", "Moderator"]), // ✅ chỉ admin + moderator
   upload.single("avatar"),
   async (req, res) => {
     try {
-      console.log("📸 File nhận được:", req.file);
-
-      if (!req.file) {
+      if (!req.file)
         return res.status(400).json({ message: "Chưa có file nào được tải lên!" });
-      }
 
       const fileUrl = `/uploads/${req.file.filename}`;
+
+      // 👇 Cập nhật avatar cho user hiện tại
+      const updatedUser = await User.findByIdAndUpdate(
+        req.user.id,                      // 👈 id từ token
+        { avatar: fileUrl },
+        { new: true }                     // 👈 trả về user sau khi cập nhật
+      ).select("-password");
 
       res.status(200).json({
         message: "Upload thành công!",
         filePath: fileUrl,
+        user: updatedUser,                // 👈 gửi luôn user mới về frontend
       });
     } catch (err) {
       console.error("❌ Lỗi khi upload:", err);
@@ -139,5 +144,6 @@ router.post(
     }
   }
 );
+
 
 module.exports = router;

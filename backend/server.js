@@ -13,8 +13,8 @@ const app = express();
 
 // ✅ Middleware
 app.use(express.json());
-app.use("/uploads", express.static("uploads"));
-app.use(
+const path = require("path");
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));app.use(
   cors({
     origin: "http://localhost:5173",
     methods: ["GET", "POST", "PUT", "DELETE"],
@@ -67,13 +67,15 @@ async function createDefaultAdmin() {
 const authRoutes = require("./routes/authRoutes");
 const profileRoutes = require("./routes/profileRoutes");
 const userRoutes = require("./routes/users");
-const uploadRoutes = require("./routes/uploadRoutes");
+
 
 // ✅ Sử dụng route — có tiền tố /api/
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
-app.use("/api/users", userRoutes);     // 👈 chứa RBAC (checkRole)
-app.use("/api/upload", uploadRoutes);  // 👈 upload tách riêng
+app.use("/api/users", userRoutes);
+app.use("/api/upload", require("./routes/uploadRoutes"));
+app.use("/uploads", express.static("uploads"));
+
 
 
 // ✅ Kiểm tra route gốc
