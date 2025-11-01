@@ -8,12 +8,16 @@ const nodemailer = require("nodemailer");
 const User = require("../models/user");
 const RefreshToken = require("../models/refreshToken");
 
+// 🆕 THÊM 2 MIDDLEWARE
+const rateLimitLogin = require("../middleware/rateLimitLogin");
+const logActivity = require("../middleware/logActivity");
+
 // ====================== CONFIG ======================
 const JWT_SECRET = "secret_key_demo";
 const JWT_REFRESH_SECRET = "refresh_secret_key";
 
 // ====================== ĐĂNG KÝ ======================
-router.post("/signup", async (req, res) => {
+router.post("/signup", async (req, res, next) => {
   try {
     const { name, email, password, role } = req.body;
 
@@ -34,13 +38,15 @@ router.post("/signup", async (req, res) => {
   } catch (err) {
     console.error("❌ Lỗi signup:", err);
     res.status(500).json({ message: err.message });
+  } finally {
+    // 🧩 GHI LOG SAU KHI ĐĂNG KÝ
+    logActivity(req, res, () => {});
   }
 });
 
 // ====================== QUÊN MẬT KHẨU ======================
-router.post("/forgot-password", async (req, res) => {
+router.post("/forgot-password", async (req, res, next) => {
   const { email } = req.body;
-
   try {
     const user = await User.findOne({ email });
     if (!user)
@@ -48,17 +54,14 @@ router.post("/forgot-password", async (req, res) => {
 
     const token = crypto.randomBytes(32).toString("hex");
     user.resetToken = token;
-    user.resetTokenExp = Date.now() + 15 * 60 * 1000; // 15 phút
+    user.resetTokenExp = Date.now() + 15 * 60 * 1000;
     await user.save();
-
-    console.log("✅ Token lưu vào DB:", token);
-    console.log("📧 Gửi mail reset cho:", user.email);
 
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: "vankhoa100704@gmail.com", // Gmail thật
-        pass: "szyr vsle eqal qppc", // App password
+        user: "vankhoa100704@gmail.com",
+        pass: "szyr vsle eqal qppc", // 👉 khuyên nên lưu vào .env
       },
     });
 
@@ -74,24 +77,19 @@ router.post("/forgot-password", async (req, res) => {
   } catch (err) {
     console.error("❌ Lỗi forgot-password:", err.message);
     res.status(500).json({ message: "Lỗi server", error: err.message });
+  } finally {
+    logActivity(req, res, () => {});
   }
 });
 
 // ====================== ĐẶT LẠI MẬT KHẨU ======================
-router.post("/reset-password", async (req, res) => {
-  console.log("📩 Nhận request /reset-password");
-  console.log("📦 BODY:", req.body);
-
+router.post("/reset-password", async (req, res, next) => {
   const { token, password } = req.body;
-
   try {
     const user = await User.findOne({
       resetToken: token,
       resetTokenExp: { $gt: Date.now() },
     });
-
-    console.log("🟢 Token nhận từ frontend:", token);
-    console.log("🟢 User tìm thấy:", user ? user.email : "null");
 
     if (!user)
       return res
@@ -107,11 +105,13 @@ router.post("/reset-password", async (req, res) => {
   } catch (err) {
     console.error("❌ Lỗi reset password:", err.message);
     res.status(500).json({ message: "Lỗi server", error: err.message });
+  } finally {
+    logActivity(req, res, () => {});
   }
 });
 
 // ====================== ĐĂNG NHẬP (Access + Refresh) ======================
-router.post("/login", async (req, res) => {
+router.post("/login", rateLimitLogin, async (req, res, next) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
@@ -149,11 +149,14 @@ router.post("/login", async (req, res) => {
   } catch (err) {
     console.error("❌ Lỗi đăng nhập:", err);
     res.status(500).json({ message: err.message });
+  } finally {
+    // 🧩 GHI LOG HOẠT ĐỘNG LOGIN
+    logActivity(req, res, () => {});
   }
 });
 
 // ====================== REFRESH TOKEN ======================
-router.post("/refresh", async (req, res) => {
+router.post("/refresh", async (req, res, next) => {
   const { refreshToken } = req.body;
   if (!refreshToken)
     return res.status(401).json({ message: "Thiếu refresh token!" });
@@ -175,11 +178,13 @@ router.post("/refresh", async (req, res) => {
   } catch (err) {
     console.error("❌ Lỗi refresh token:", err.message);
     res.status(403).json({ message: "Refresh token hết hạn hoặc không hợp lệ!" });
+  } finally {
+    logActivity(req, res, () => {});
   }
 });
 
 // ====================== LOGOUT ======================
-router.post("/logout", async (req, res) => {
+router.post("/logout", async (req, res, next) => {
   const { refreshToken } = req.body;
   try {
     await RefreshToken.deleteOne({ token: refreshToken });
@@ -187,6 +192,8 @@ router.post("/logout", async (req, res) => {
   } catch (err) {
     console.error("❌ Lỗi logout:", err.message);
     res.status(500).json({ message: "Lỗi khi đăng xuất!" });
+  } finally {
+    logActivity(req, res, () => {});
   }
 });
 

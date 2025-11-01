@@ -4,24 +4,22 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
-const User = require("./models/user"); // 👈 dùng để tạo admin
-
-// ✅ KHÔNG cần require("./routes/auth") ở đây
+const path = require("path");
+const User = require("./models/user");
 
 // ✅ Khởi tạo app
 const app = express();
 
-// ✅ Middleware
+// ✅ Middleware chung
 app.use(express.json());
-const path = require("path");
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));app.use(
+app.use(
   cors({
     origin: "http://localhost:5173",
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   })
 );
-
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // ✅ Kết nối MongoDB Atlas
 mongoose
@@ -30,8 +28,6 @@ mongoose
   )
   .then(async () => {
     console.log("✅ Connected to MongoDB Atlas");
-
-    // 🔥 Tạo tài khoản admin mặc định nếu chưa có
     await createDefaultAdmin();
   })
   .catch((err) => console.error("❌ MongoDB connection error:", err));
@@ -48,7 +44,6 @@ async function createDefaultAdmin() {
     }
 
     const hashedPassword = await bcrypt.hash("123456", 10);
-
     const newAdmin = new User({
       name: "Administrator",
       email: adminEmail,
@@ -64,25 +59,23 @@ async function createDefaultAdmin() {
 }
 
 // ✅ Import route modules
-const authRoutes = require("./routes/authRoutes");
+const authRoutes = require("./routes/authRoutes");  // <── chính là file bạn gửi
 const profileRoutes = require("./routes/profileRoutes");
 const userRoutes = require("./routes/users");
-
-
-// ✅ Sử dụng route — có tiền tố /api/
-app.use("/api/auth", authRoutes);
+const uploadRoutes = require("./routes/uploadRoutes");
+const logRoutes = require("./routes/logRoutes");
+// ✅ Sử dụng routes có prefix /api/
+app.use("/api/auth", authRoutes);       // <── route login/signup/... có rateLimit & log
 app.use("/api/profile", profileRoutes);
 app.use("/api/users", userRoutes);
-app.use("/api/upload", require("./routes/uploadRoutes"));
-app.use("/uploads", express.static("uploads"));
-
-
-
-// ✅ Kiểm tra route gốc
+app.use("/api/upload", uploadRoutes);
+app.use("/api/logs", logRoutes);
+app.use("/api/logs", require("./routes/logRoutes"));
+// ✅ Route gốc để test server
 app.get("/", (req, res) => {
   res.send("🚀 Server is running!");
 });
 
 // ✅ Khởi chạy server
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
