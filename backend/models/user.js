@@ -17,16 +17,27 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+
+    // ✅ Bổ sung trường avatar để lưu đường dẫn ảnh
+    avatar: {
+      type: String,
+      default: "", // Mặc định rỗng nếu chưa upload
+    },
+
+    // ✅ Role xác định quyền người dùng
     role: {
       type: String,
-      enum: ["user", "admin","moderator"], // 👈 chỉ chứa loại role
+      enum: ["user", "admin", "moderator"], // chỉ cho phép 3 loại role
       default: "user",
     },
 
-    // ✅ Những trường này PHẢI ở ngoài role
-    avatar: { type: String },       // link ảnh Cloudinary hoặc local
-    resetToken: String,             // token reset mật khẩu
-    resetTokenExp: Date,            // thời hạn token
+    // ✅ Các trường phục vụ reset mật khẩu
+    resetToken: {
+      type: String,
+    },
+    resetTokenExp: {
+      type: Date,
+    },
   },
   { timestamps: true }
 );
