@@ -1,18 +1,17 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import ResetPassword from "./components/ResetPassword";
+import AdminLogs from "./components/AdminLogs"; // ✅ Thêm mới
 
 import {
   BrowserRouter as Router,
   Routes,
   Route,
   useNavigate,
-  useParams,
 } from "react-router-dom";
 import { Pencil, Trash2, Upload } from "lucide-react";
 
 const API = "http://localhost:5000/api";
-
 
 // ============================
 // COMPONENT: QUẢN LÝ NGƯỜI DÙNG
@@ -89,13 +88,23 @@ function UserList() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-100 to-pink-50 flex flex-col items-center p-10">
       <div className="flex justify-between items-center w-full max-w-md mb-6">
-        <h1 className="text-3xl font-bold text-purple-700">👑 Quản lý người dùng</h1>
-        <button
-          onClick={handleLogout}
-          className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-        >
-          Đăng xuất
-        </button>
+        <h1 className="text-3xl font-bold text-purple-700">
+          👑 Quản lý người dùng
+        </h1>
+        <div className="flex gap-2">
+          <button
+            onClick={() => navigate("/admin/logs")} // ✅ Nút đi đến trang log
+            className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
+          >
+            📜 Xem Log
+          </button>
+          <button
+            onClick={handleLogout}
+            className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+          >
+            Đăng xuất
+          </button>
+        </div>
       </div>
 
       <div className="bg-white shadow-lg rounded-2xl p-6 w-full max-w-md mb-10">
@@ -208,9 +217,6 @@ function ForgotPassword() {
   );
 }
 
-
-
-
 // ============================
 // COMPONENT: UPLOAD AVATAR
 // ============================
@@ -264,7 +270,12 @@ function UploadAvatar() {
 // COMPONENT: ĐĂNG KÝ (CÓ ROLE)
 // ============================
 function Signup() {
-  const [form, setForm] = useState({ name: "", email: "", password: "", role: "user" });
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    role: "user",
+  });
   const navigate = useNavigate();
 
   const handleSignup = async (e) => {
@@ -311,7 +322,6 @@ function Signup() {
           onChange={(e) => setForm({ ...form, password: e.target.value })}
         />
 
-        {/* 👇 Thêm dropdown chọn vai trò */}
         <select
           className="w-full p-2 mb-4 border rounded bg-white"
           value={form.role}
@@ -351,25 +361,18 @@ function Login() {
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
-  e.preventDefault();
-  try {
-    const res = await axios.post(`${API}/auth/login`, form);
-
-    // ✅ Lưu đúng key mà backend trả về
-    localStorage.setItem("token", res.data.accessToken);
-    localStorage.setItem("refreshToken", res.data.refreshToken);
-
-    console.log("🧠 accessToken:", res.data.accessToken);
-    console.log("✅ Token đã lưu:", localStorage.getItem("token"));
-
-    alert("Đăng nhập thành công!");
-    navigate("/users");
-  } catch (err) {
-    console.error("❌ Lỗi đăng nhập:", err);
-    alert("Sai tài khoản hoặc mật khẩu!");
-  }
-};
-
+    e.preventDefault();
+    try {
+      const res = await axios.post(`${API}/auth/login`, form);
+      localStorage.setItem("token", res.data.accessToken);
+      localStorage.setItem("refreshToken", res.data.refreshToken);
+      alert("Đăng nhập thành công!");
+      navigate("/users");
+    } catch (err) {
+      console.error("❌ Lỗi đăng nhập:", err);
+      alert("Sai tài khoản hoặc mật khẩu!");
+    }
+  };
 
   return (
     <div className="flex justify-center items-center h-screen bg-purple-100">
@@ -434,6 +437,7 @@ export default function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/upload-avatar" element={<UploadAvatar />} />
+        <Route path="/admin/logs" element={<AdminLogs />} /> {/* ✅ Route mới */}
       </Routes>
     </Router>
   );
