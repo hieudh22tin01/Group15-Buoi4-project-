@@ -1,11 +1,15 @@
 // backend/server.js
-require("dotenv").config();
+const path = require("path");
+const dotenv = require("dotenv");
+dotenv.config({ path: path.resolve(__dirname, ".env") }); // ✅ Ép Node đọc đúng file .env
+console.log("🔍 PORT từ .env:", process.env.PORT);
+
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
-const path = require("path");
 const User = require("./models/user");
+
 
 // ✅ Khởi tạo app
 const app = express();

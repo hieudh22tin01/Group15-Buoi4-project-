@@ -1,8 +1,8 @@
-const User = require("../backend/models/user");
+const User = require("../models/user");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
-const sendEmail = require("../backend/utils/sendEmail");
+const sendEmail = require("../utils/sendEmail");
 require("dotenv").config();
 
 const SECRET_KEY = "secret_key_demo"; // nên lưu .env

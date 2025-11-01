@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import ResetPassword from "./components/ResetPassword";
-import AdminLogs from "./components/AdminLogs"; // ✅ Thêm mới
-
+import AdminLogs from "./components/AdminLogs";
+import ProtectedRoute from "./components/ProtectedRoute"; // ✅ Đã thêm Protected Route
 import {
   BrowserRouter as Router,
   Routes,
@@ -93,7 +93,7 @@ function UserList() {
         </h1>
         <div className="flex gap-2">
           <button
-            onClick={() => navigate("/admin/logs")} // ✅ Nút đi đến trang log
+            onClick={() => navigate("/admin/logs")}
             className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
           >
             📜 Xem Log
@@ -424,20 +424,44 @@ function Login() {
 }
 
 // ============================
-// APP CHÍNH
+// APP CHÍNH (BẢO VỆ ROUTES)
 // ============================
 export default function App() {
   return (
     <Router>
       <Routes>
+        {/* Public routes */}
         <Route path="/" element={<Login />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/users" element={<UserList />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/upload-avatar" element={<UploadAvatar />} />
-        <Route path="/admin/logs" element={<AdminLogs />} /> {/* ✅ Route mới */}
+
+        {/* Protected routes */}
+        <Route
+          path="/users"
+          element={
+            <ProtectedRoute>
+              <UserList />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/upload-avatar"
+          element={
+            <ProtectedRoute>
+              <UploadAvatar />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/logs"
+          element={
+            <ProtectedRoute>
+              <AdminLogs />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </Router>
   );

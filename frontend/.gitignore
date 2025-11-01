@@ -1,25 +1,66 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# ===========================================
+# 🧩 NODE + EXPRESS BACKEND
+# ===========================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json*
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.js
-
-# testing
-/coverage
-
-# production
-/build
-
-# misc
-.DS_Store
+# Env config (quan trọng)
+.env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
 
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+# Build output
+dist/
+build/
+tmp/
+temp/
+uploads/
+logs/
+coverage/
 
-.vercel
+# System files
+.DS_Store
+Thumbs.db
+
+# ===========================================
+# ⚛️ REACT FRONTEND
+# ===========================================
+frontend/node_modules/
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+frontend/build/
+frontend/dist/
+frontend/coverage/
+frontend/.DS_Store
+
+# ===========================================
+# 🧰 VSCODE + IDE files
+# ===========================================
+.vscode/
+.idea/
+*.iml
+
+# ===========================================
+# ⚙️ Misc
+# ===========================================
+*.log
+*.cache
+*.tmp
+*.bak
+*.swp
+
+# ===========================================
+# 🧮 OS-specific (Windows / macOS)
+# ===========================================
+ehthumbs.db
+Icon?
+Desktop.ini

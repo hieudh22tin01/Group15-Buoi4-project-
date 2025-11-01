@@ -1,64 +1,72 @@
 import { useState } from "react";
-import axios from "axios";
+import { useDispatch, useSelector } from "react-redux";
+import { loginUser } from "../store/authSlice"; // ⚠️ Cập nhật đường dẫn mới
+import { useNavigate } from "react-router-dom";
 
-function Login({ onLogin }) {
+export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const { loading, error, user } = useSelector((state) => state.auth);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("🚀 Bắt đầu submit form login..."); 
-    setError("");
-
-    try {
-      const res = await axios.post("http://localhost:5000/api/auth/login", {
-        email,
-        password,
-      });
-
-      console.log("🧠 Kết quả từ backend:", res.data);
-
-      // ✅ Lưu token đúng key
-      localStorage.setItem("token", res.data.accessToken);
-      localStorage.setItem("refreshToken", res.data.refreshToken);
-
-      console.log("✅ Lưu token thành công!");
-      alert("🎉 Đăng nhập thành công!");
-
-      if (onLogin) onLogin(res.data.user);
-    } catch (err) {
-      console.error("❌ Lỗi đăng nhập:", err);
-      setError(err.response?.data?.message || "Lỗi kết nối server");
-    }
+    dispatch(loginUser({ email, password }))
+      .unwrap()
+      .then(() => {
+        alert("🎉 Đăng nhập thành công!");
+        navigate("/users");
+      })
+      .catch((err) => console.error("❌ Lỗi đăng nhập:", err));
   };
 
   return (
-    <div style={{ marginTop: "20px" }}>
+    <div style={{ marginTop: "40px", textAlign: "center" }}>
       <h2>🔐 Đăng nhập</h2>
-      <form onSubmit={handleSubmit}>
+      <form
+        onSubmit={handleSubmit}
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "10px",
+          width: "250px",
+          margin: "0 auto",
+        }}
+      >
         <input
           type="email"
-          placeholder="Email"
+          placeholder="Nhập email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
         />
-        <br />
         <input
           type="password"
-          placeholder="Mật khẩu"
+          placeholder="Nhập mật khẩu"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-        <br />
-        <button type="submit">Đăng nhập</button>
+        <button
+          type="submit"
+          disabled={loading}
+          style={{
+            backgroundColor: "#6a0dad",
+            color: "white",
+            padding: "8px",
+            borderRadius: "6px",
+            border: "none",
+            cursor: "pointer",
+          }}
+        >
+          {loading ? "⏳ Đang đăng nhập..." : "Đăng nhập"}
+        </button>
       </form>
 
       {error && <p style={{ color: "red" }}>⚠️ {error}</p>}
+      {user && <p style={{ color: "green" }}>Xin chào, {user.name || "User"} 👋</p>}
     </div>
   );
 }
-
-export default Login;

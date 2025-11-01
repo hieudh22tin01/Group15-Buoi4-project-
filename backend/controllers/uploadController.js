@@ -1,5 +1,5 @@
 const cloudinary = require("cloudinary").v2;
-const User = require("../backend/models/user");
+const User = require("../models/user");
 const multer = require("multer");
 const jwt = require("jsonwebtoken");
 

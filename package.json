@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@reduxjs/toolkit": "^2.9.2",
     "axios": "^1.12.2",
     "bcryptjs": "^3.0.2",
     "cloudinary": "^1.41.3",
@@ -11,6 +12,7 @@
     "multer-storage-cloudinary": "^4.0.0",
     "nodemailer": "^7.0.10",
     "npm": "^11.6.2",
+    "react-redux": "^9.2.0",
     "react-router-dom": "^7.9.4"
   }
 }
