@@ -67,14 +67,13 @@ async function createDefaultAdmin() {
 const authRoutes = require("./routes/authRoutes");
 const profileRoutes = require("./routes/profileRoutes");
 const userRoutes = require("./routes/users");
-
+const uploadRoutes = require("./routes/uploadRoutes");
 
 // ✅ Sử dụng route — có tiền tố /api/
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api/upload", require("./routes/uploadRoutes"));
-app.use("/api/users", require("./routes/uploadRoutes")); // 👈 thêm dòng này
+app.use("/api/users", userRoutes);     // 👈 chứa RBAC (checkRole)
+app.use("/api/upload", uploadRoutes);  // 👈 upload tách riêng
 
 
 // ✅ Kiểm tra route gốc

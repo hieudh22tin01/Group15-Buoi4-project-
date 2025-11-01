@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 
-const JWT_SECRET = "secret_key_demo"; // 👈 phải TRÙNG với key trong authRoutes.js
+const JWT_SECRET = "secret_key_demo"; // 👈 phải TRÙNG với key trong nơi tạo token
 
 // ✅ Middleware xác thực người dùng
 module.exports = function (req, res, next) {
@@ -14,8 +14,8 @@ module.exports = function (req, res, next) {
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    console.log("🧩 Token giải mã:", decoded); // 👀 Debug ở đây để xem role
-    req.user = decoded; // Gắn user vào request để adminOnly đọc được
+    console.log("🧩 Token giải mã:", decoded); // debug: xem role
+    req.user = decoded; // 👈 gắn id, email, role vào request
     next();
   } catch (err) {
     console.error("❌ Lỗi xác thực token:", err.message);

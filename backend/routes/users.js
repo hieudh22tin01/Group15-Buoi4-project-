@@ -6,17 +6,13 @@ const path = require("path");
 const fs = require("fs");
 const User = require("../models/user");
 const authMiddleware = require("../middleware/authMiddleware");
+const checkRole = require("../middleware/checkRole"); // ✅ import middleware mới
 const router = express.Router();
-// ✅ Middleware kiểm tra quyền admin
-function adminOnly(req, res, next) {
-  if (req.user.role !== "admin") {
-    return res.status(403).json({ message: "Chỉ admin mới có quyền!" });
-  }
-  next();
-}
 
-// ✅ GET /api/users — chỉ admin được xem
-router.get("/", authMiddleware, adminOnly, async (req, res) => {
+/* ----------------------------------------
+   ✅ GET /api/users — Admin, Moderator được xem
+---------------------------------------- */
+router.get("/", authMiddleware, checkRole(["Admin", "Moderator"]), async (req, res) => {
   try {
     const users = await User.find().select("-password");
     res.json(users);
@@ -26,9 +22,9 @@ router.get("/", authMiddleware, adminOnly, async (req, res) => {
 });
 
 /* ----------------------------------------
-   ✅ POST /api/users — admin thêm user mới
+   ✅ POST /api/users — chỉ Admin được thêm user mới
 ---------------------------------------- */
-router.post("/", adminOnly, async (req, res) => {
+router.post("/", authMiddleware, checkRole("Admin"), async (req, res) => {
   try {
     console.log("📩 Dữ liệu nhận từ frontend:", req.body);
     const { name, email, password, role } = req.body;
@@ -47,7 +43,7 @@ router.post("/", adminOnly, async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      role: role || "user",
+      role: role || "User", // 🔧 luôn gán "User" nếu không có role
     });
 
     res.status(201).json({
@@ -66,9 +62,9 @@ router.post("/", adminOnly, async (req, res) => {
 });
 
 /* ----------------------------------------
-   ✅ PUT /api/users/:id — admin cập nhật user
+   ✅ PUT /api/users/:id — chỉ Admin được cập nhật user
 ---------------------------------------- */
-router.put("/:id", adminOnly, async (req, res) => {
+router.put("/:id", authMiddleware, checkRole("Admin"), async (req, res) => {
   try {
     const { name, email, role } = req.body;
 
@@ -88,9 +84,9 @@ router.put("/:id", adminOnly, async (req, res) => {
 });
 
 /* ----------------------------------------
-   ✅ DELETE /api/users/:id — admin xóa user
+   ✅ DELETE /api/users/:id — chỉ Admin được xóa user
 ---------------------------------------- */
-router.delete("/:id", adminOnly, async (req, res) => {
+router.delete("/:id", authMiddleware, checkRole("Admin"), async (req, res) => {
   try {
     await User.findByIdAndDelete(req.params.id);
     res.json({ message: "Đã xóa user!" });
@@ -100,7 +96,7 @@ router.delete("/:id", adminOnly, async (req, res) => {
 });
 
 /* ----------------------------------------
-   ✅ POST /api/users/upload-avatar — admin upload avatar
+   ✅ POST /api/users/upload-avatar — chỉ Admin và Moderator được upload avatar
 ---------------------------------------- */
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -118,24 +114,30 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-router.post("/upload-avatar", adminOnly, upload.single("avatar"), async (req, res) => {
-  try {
-    console.log("📸 File nhận được:", req.file);
+router.post(
+  "/upload-avatar",
+  authMiddleware,
+  checkRole(["Admin", "Moderator"]), // ✅ chỉ admin + moderator
+  upload.single("avatar"),
+  async (req, res) => {
+    try {
+      console.log("📸 File nhận được:", req.file);
 
-    if (!req.file) {
-      return res.status(400).json({ message: "Chưa có file nào được tải lên!" });
+      if (!req.file) {
+        return res.status(400).json({ message: "Chưa có file nào được tải lên!" });
+      }
+
+      const fileUrl = `/uploads/${req.file.filename}`;
+
+      res.status(200).json({
+        message: "Upload thành công!",
+        filePath: fileUrl,
+      });
+    } catch (err) {
+      console.error("❌ Lỗi khi upload:", err);
+      res.status(500).json({ message: "Lỗi server khi upload!", error: err.message });
     }
-
-    const fileUrl = `/uploads/${req.file.filename}`;
-
-    res.status(200).json({
-      message: "Upload thành công!",
-      filePath: fileUrl,
-    });
-  } catch (err) {
-    console.error("❌ Lỗi khi upload:", err);
-    res.status(500).json({ message: "Lỗi server khi upload!", error: err.message });
   }
-});
+);
 
 module.exports = router;

@@ -52,20 +52,38 @@ exports.resetPassword = async (req, res) => {
 // ✅ Đăng ký
 exports.signup = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    // 👉 Nhận thêm trường role từ frontend hoặc Postman
+    const { name, email, password, role } = req.body;
 
     const existing = await User.findOne({ email });
     if (existing) return res.status(400).json({ message: "Email đã tồn tại!" });
 
     const hashed = await bcrypt.hash(password, 10);
-    const newUser = new User({ name, email, password: hashed });
+
+    // 👉 Gán role (nếu không truyền thì mặc định là "User")
+    const newUser = new User({
+      name,
+      email,
+      password: hashed,
+      role: role || "User",
+    });
+
     await newUser.save();
 
-    res.status(201).json({ message: "Đăng ký thành công!", user: newUser });
+    res.status(201).json({
+      message: "Đăng ký thành công!",
+      user: {
+        id: newUser._id,
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role,
+      },
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
+
 
 // ✅ Đăng nhập
 exports.login = async (req, res) => {
