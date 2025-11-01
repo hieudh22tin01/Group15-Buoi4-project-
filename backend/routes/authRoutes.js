@@ -1,5 +1,4 @@
 console.log("✅ authRoutes.js đã được load vào server!");
-
 const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcryptjs");

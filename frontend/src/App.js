@@ -261,19 +261,20 @@ function UploadAvatar() {
 }
 
 // ============================
-// COMPONENT: ĐĂNG KÝ
+// COMPONENT: ĐĂNG KÝ (CÓ ROLE)
 // ============================
 function Signup() {
-  const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [form, setForm] = useState({ name: "", email: "", password: "", role: "user" });
   const navigate = useNavigate();
 
   const handleSignup = async (e) => {
     e.preventDefault();
     try {
       await axios.post(`${API}/auth/signup`, form);
-      alert("Đăng ký thành công!");
+      alert("🎉 Đăng ký thành công! Hãy đăng nhập để tiếp tục.");
       navigate("/login");
-    } catch {
+    } catch (err) {
+      console.error("❌ Lỗi đăng ký:", err);
       alert("Đăng ký thất bại!");
     }
   };
@@ -284,7 +285,10 @@ function Signup() {
         onSubmit={handleSignup}
         className="bg-white p-6 rounded-2xl shadow-xl w-80"
       >
-        <h2 className="text-2xl font-bold mb-4 text-center">Đăng ký</h2>
+        <h2 className="text-2xl font-bold mb-4 text-center text-purple-700">
+          Đăng ký tài khoản
+        </h2>
+
         <input
           type="text"
           placeholder="Tên"
@@ -306,12 +310,25 @@ function Signup() {
           value={form.password}
           onChange={(e) => setForm({ ...form, password: e.target.value })}
         />
+
+        {/* 👇 Thêm dropdown chọn vai trò */}
+        <select
+          className="w-full p-2 mb-4 border rounded bg-white"
+          value={form.role}
+          onChange={(e) => setForm({ ...form, role: e.target.value })}
+        >
+          <option value="user">👤 User</option>
+          <option value="moderator">🛡️ Moderator</option>
+          <option value="admin">👑 Admin</option>
+        </select>
+
         <button
           type="submit"
-          className="w-full bg-purple-500 text-white p-2 rounded"
+          className="w-full bg-purple-500 hover:bg-purple-600 text-white p-2 rounded"
         >
           Đăng ký
         </button>
+
         <p className="text-sm mt-3 text-center">
           Đã có tài khoản?{" "}
           <span
@@ -334,16 +351,25 @@ function Login() {
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await axios.post(`${API}/auth/login`, form);
-      localStorage.setItem("token", res.data.token);
-      alert("Đăng nhập thành công!");
-      navigate("/users");
-    } catch {
-      alert("Sai tài khoản hoặc mật khẩu!");
-    }
-  };
+  e.preventDefault();
+  try {
+    const res = await axios.post(`${API}/auth/login`, form);
+
+    // ✅ Lưu đúng key mà backend trả về
+    localStorage.setItem("token", res.data.accessToken);
+    localStorage.setItem("refreshToken", res.data.refreshToken);
+
+    console.log("🧠 accessToken:", res.data.accessToken);
+    console.log("✅ Token đã lưu:", localStorage.getItem("token"));
+
+    alert("Đăng nhập thành công!");
+    navigate("/users");
+  } catch (err) {
+    console.error("❌ Lỗi đăng nhập:", err);
+    alert("Sai tài khoản hoặc mật khẩu!");
+  }
+};
+
 
   return (
     <div className="flex justify-center items-center h-screen bg-purple-100">

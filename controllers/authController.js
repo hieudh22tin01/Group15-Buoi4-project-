@@ -5,7 +5,7 @@ const crypto = require("crypto");
 const sendEmail = require("../backend/utils/sendEmail");
 require("dotenv").config();
 
-const SECRET_KEY = "secret123"; // nên lưu .env
+const SECRET_KEY = "secret_key_demo"; // nên lưu .env
 
 exports.forgotPassword = async (req, res) => {
   const { email } = req.body;
@@ -24,39 +24,66 @@ exports.forgotPassword = async (req, res) => {
 };
 
 exports.resetPassword = async (req, res) => {
-  const { token } = req.params;
-  const { newPassword: password } = req.body;
-  const user = await User.findOne({
-    resetToken: token,
-    resetTokenExpire: { $gt: Date.now() },
-  });
-  if (!user) return res.status(400).json({ message: "Token không hợp lệ!" });
+  try {
+    // NHẬN token và newPassword từ body
+    const { token, newPassword } = req.body;
+    if (!token || !newPassword) {
+      return res.status(400).json({ message: "Missing token or newPassword" });
+    }
 
-  const hash = await bcrypt.hash(newPassword, 10);
-  user.password = hash;
-  user.resetToken = undefined;
-  user.resetTokenExpire = undefined;
-  await user.save();
+    const user = await User.findOne({
+      resetToken: token,
+      resetTokenExpire: { $gt: Date.now() },
+    });
 
-  res.json({ message: "Đặt lại mật khẩu thành công!" });
+    if (!user) return res.status(400).json({ message: "Token không hợp lệ hoặc đã hết hạn!" });
+
+    const hash = await bcrypt.hash(newPassword, 10);
+    user.password = hash;
+    user.resetToken = undefined;
+    user.resetTokenExpire = undefined;
+    await user.save();
+
+    res.json({ message: "Đặt lại mật khẩu thành công!" });
+  } catch (err) {
+    res.status(500).json({ message: "Lỗi server", error: err.message });
+  }
 };
 // ✅ Đăng ký
 exports.signup = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    // 👉 Nhận thêm trường role từ frontend hoặc Postman
+    const { name, email, password, role } = req.body;
 
     const existing = await User.findOne({ email });
     if (existing) return res.status(400).json({ message: "Email đã tồn tại!" });
 
     const hashed = await bcrypt.hash(password, 10);
-    const newUser = new User({ name, email, password: hashed });
+
+    // 👉 Gán role (nếu không truyền thì mặc định là "User")
+    const newUser = new User({
+      name,
+      email,
+      password: hashed,
+      role: role || "User",
+    });
+
     await newUser.save();
 
-    res.status(201).json({ message: "Đăng ký thành công!", user: newUser });
+    res.status(201).json({
+      message: "Đăng ký thành công!",
+      user: {
+        id: newUser._id,
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role,
+      },
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
+
 
 // ✅ Đăng nhập
 exports.login = async (req, res) => {

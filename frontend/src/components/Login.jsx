@@ -8,19 +8,24 @@ function Login({ onLogin }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log("🚀 Bắt đầu submit form login..."); 
     setError("");
 
     try {
       const res = await axios.post("http://localhost:5000/api/auth/login", {
         email,
-        password
+        password,
       });
 
-      // ✅ Lưu token và thông tin user
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
+      console.log("🧠 Kết quả từ backend:", res.data);
 
-      alert("Đăng nhập thành công!");
+      // ✅ Lưu token đúng key
+      localStorage.setItem("token", res.data.accessToken);
+      localStorage.setItem("refreshToken", res.data.refreshToken);
+
+      console.log("✅ Lưu token thành công!");
+      alert("🎉 Đăng nhập thành công!");
+
       if (onLogin) onLogin(res.data.user);
     } catch (err) {
       console.error("❌ Lỗi đăng nhập:", err);

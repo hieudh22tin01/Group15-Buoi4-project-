@@ -1,37 +1,20 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
+import React, { useEffect, useState } from "react";
+import axiosInstance from "../api/axiosInstance";
 
-const API = "http://localhost:5000/api/users";
-
-function UserList() {
+export default function UserList() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
 
-  // 🧠 Lấy danh sách user
+  // 🧠 Lấy danh sách user (dùng axiosInstance tự refresh token)
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        alert("⚠️ Chưa có token — vui lòng đăng nhập admin!");
-        return;
-      }
-
-      const res = await axios.get(API, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axiosInstance.get("/users");
       setUsers(res.data);
     } catch (err) {
       console.error("❌ Lỗi khi tải danh sách users:", err);
-      if (err.response?.status === 403) {
-        alert("Bạn không có quyền xem danh sách người dùng (403 Forbidden)");
-      } else if (err.response?.status === 401) {
-        alert("Token hết hạn hoặc không hợp lệ — vui lòng đăng nhập lại!");
-      } else {
-        alert("Không thể tải danh sách người dùng.");
-      }
     } finally {
       setLoading(false);
     }
@@ -41,47 +24,38 @@ function UserList() {
     fetchUsers();
   }, []);
 
+  // 🧩 Thêm người dùng mới
   const handleAddUser = async (e) => {
-  e.preventDefault();
-
-  if (!name.trim() || !email.trim()) {
-    alert("Vui lòng nhập đầy đủ tên và email!");
-    return;
-  }
-
-  try {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      alert("Bạn chưa đăng nhập admin!");
+    e.preventDefault();
+    if (!name.trim() || !email.trim()) {
+      alert("⚠️ Vui lòng nhập đầy đủ tên và email!");
       return;
     }
-console.log("📦 Dữ liệu gửi lên:", { name, email, password: "123456", role: "User" });
-    const res = await axios.post(
-      API,
-      {
+
+    try {
+      console.log("📦 Dữ liệu gửi lên:", {
         name,
         email,
         password: "123456",
         role: "User",
-      },
-      {
-        headers: { 
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+      });
 
-    alert("✅ " + res.data.message);
-    setName("");
-    setEmail("");
-    fetchUsers(); // reload danh sách
-  } catch (err) {
-    console.error("❌ Lỗi khi thêm user:", err.response?.data || err.message);
-    alert(err.response?.data?.message || "Lỗi khi thêm user!");
-  }
-};
+      const res = await axiosInstance.post("/users", {
+        name,
+        email,
+        password: "123456",
+        role: "User",
+      });
 
+      alert("✅ " + res.data.message);
+      setName("");
+      setEmail("");
+      fetchUsers();
+    } catch (err) {
+      console.error("❌ Lỗi khi thêm user:", err);
+      alert(err.response?.data?.message || "Lỗi khi thêm user!");
+    }
+  };
 
   return (
     <div style={{ marginTop: "20px" }}>
@@ -123,5 +97,3 @@ console.log("📦 Dữ liệu gửi lên:", { name, email, password: "123456", r
     </div>
   );
 }
-
-export default UserList;
